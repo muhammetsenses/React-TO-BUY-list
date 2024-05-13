@@ -1,7 +1,15 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
+ #root {
+  min-width: 1080px;
+  margin: 0 50% ;
   padding: 2rem;
   text-align: center;
 }
 
+
+body{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  min-width: 1000px;
+}
