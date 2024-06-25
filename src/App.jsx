@@ -1,239 +1,178 @@
-import { Form, Button, Container, Table } from "react-bootstrap";
 import { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import styled from "styled-components";
 import "./App.css";
-import JSConfetti from "js-confetti";
-import IconComp from "./components/IconButton";
-import Fuse from "fuse.js";
+import { nanoid } from "nanoid";
+import { FaTrash,FaPenSquare } from "react-icons/fa";
+import { Modal } from "react-bootstrap";
+
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 800px;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+`;
+const InputDiv = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 3rem 0;
+`;
+const InputEl = styled.input`
+  min-width: 300px;
+  border-radius: 1rem;
+  border: 1px solid black;
+  padding-left: 1rem;
+`;
+const Button = styled.button`
+  color: white;
+  background-color: rgb(22, 84, 141);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid black;
+  cursor: pointer;
+`;
+const ListItemEl = styled.li`
+  display:flex;
+  align-items: center;
+  list-style: none;
+  border: 1px solid black;
+  border-radius: 1rem;
+  padding: 0.5rem 1rem;
+  width: 500px;
+  margin-bottom: 1rem;
+  background-color: #d6d6cd;
+  justify-content:space-between;
+`;
+const ButtonContainer = styled.div`
+display:flex;
+gap: 1rem;
+`
+const ButtonInput = styled.button`
+display:flex;
+justify-content:center;
+align-items:center;
+background-color: #2f3e6e;
+color: #fff;
+font-size: 1rem;
+padding: .5rem;
+border: 1px solid black;
+`
+
+interface ListItem {
+  id: string;
+  content: string;
+}
 
 function App() {
-  const shops = [
-    { id: 1, name: "Migros" },
-    { id: 2, name: "Teknosa" },
-    { id: 3, name: "Bim" },
-  ];
-  const categories = [
-    { id: 1, name: "Elektronik" },
-    { id: 2, name: "Şarküteri" },
-    { id: 3, name: "Oyuncak" },
-    { id: 4, name: "Bakliyat" },
-    { id: 5, name: "Fırın" },
-  ];
+  const [inputVal, setInputVal] = useState<string>("");
+  const [listItems, setListItems] = useState<ListItem[]>([]);
+  const [modalInputValue,setModalInputValue] = useState<string>("")
+  const [modalIsOpen,setModalIsOpen] = useState<boolean>(false);
+  const [selectedId,setSelectedId] = useState<string>("")
 
-  const [products, setProducts] = useState([]);
-  const [productName, setProductName] = useState("");
-  const [productShop, setProductShop] = useState("");
-  const [productCategory, setProductCategory] = useState("");
 
-  const [filteredName, setFilteredName] = useState("");
-  const [filteredShopId, setFilteredShopId] = useState("");
-  const [filteredCategoryId, setFilteredCategoryId] = useState("");
-  const [filteredStatus, setFilteredStatus] = useState("");
-
-  const addProduct = () => {
-    const product = {
-      name: productName,
-      shop: productShop,
-      category: productCategory,
-      id: uuidv4().slice(0, 5),
-      isBought: false,
+  const addTodo = () => {
+    if (inputVal.trim() === "") return;
+    
+    const newList = {
+      id: nanoid().slice(0,5),
+      content: inputVal,
     };
-    setProducts([...products, product]);
-    setProductName("");
-    setProductShop("");
-    setProductCategory("");
+    setListItems([...listItems, newList]);
+    setInputVal("");
   };
 
-  const purchased = (productId) => {
-    const updatedProducts = products.map((product) =>
-      product.id === productId
-        ? { ...product, isBought: !product.isBought }
-        : product
-    );
-    if (updatedProducts.every((upProducts) => upProducts.isBought === true)) {
-      alert("Alışveriş Tamamlandı");
-      jsConfetti.addConfetti();
-    }
-    setProducts(updatedProducts);
+  const deleteTodo = (id:string) => {
+    const newList = listItems.filter((item) =>  item.id !== id)
+    setListItems(newList)
+  }
+
+const handleClose = () => {
+  setModalIsOpen(false)
+}
+const handleShow =(id:string,content: string) => {
+  setModalIsOpen(true)
+  setSelectedId(id)
+  setModalInputValue(content)
+}
+
+const handleEdit = () => {
+  const selectedItem = listItems.find((item) => item.id === selectedId)
+  console.log(selectedItem)
+  if(selectedItem){
+    selectedItem.content = modalInputValue
+  }
+  setModalIsOpen(false)
+}
+  
+
+  const onDragEnd = (result: any) => {
+    if (!result.destination) return;
+    console.log(result);
+    const items = [...listItems];
+    const [removed] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, removed);
+
+    setListItems(items);
   };
-
-  const jsConfetti = new JSConfetti();
-
-  const filteredProducts = products.filter((product) => {
-    let result = true;
-    const fuse = new Fuse(products, { keys: ["name"] });
-    const res = fuse.search(filteredName);
-
-    if (filteredName !== "" && !res.find((r) => r.item.id === product.id)) {
-      result = false;
-    }
-    if (filteredShopId !== "" && product.shop !== filteredShopId) {
-      result = false;
-    }
-    if (filteredCategoryId !== "" && product.category !== filteredCategoryId) {
-      result = false;
-    }
-    if (
-      filteredStatus !== "all" &&
-      ((product.isBought === true && filteredStatus !== "bought") ||
-        (product.isBought === false && filteredStatus !== "notBought"))
-    ) {
-      result =  false
-    }
-    return result
-  });
 
   return (
     <>
-      <Container>
-        <Form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!productName || !productShop || !productCategory) {
-              alert("Lütfen boş alanları doldurunuz");
-            } else {
-              addProduct();
-            }
-          }}
-          className="d-flex mb-4"
-        >
-          <Form.Group className="w-100">
-            <Form.Control
-              value={productName}
-              onChange={(e) => setProductName(e.target.value)}
-              type="text"
-              placeholder="Name"
-            />
-          </Form.Group>
-          <Form.Select
-            value={productShop}
-            onChange={(e) => setProductShop(e.target.value)}
-          >
-            <option>Shop</option>
-            {shops.map((shop) => (
-              <option key={shop.id} value={shop.name}>
-                {shop.name}
-              </option>
-            ))}
-          </Form.Select>
-          <Form.Select
-            value={productCategory}
-            onChange={(e) => setProductCategory(e.target.value)}
-          >
-            <option>Category</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.name}>
-                {category.name}
-              </option>
-            ))}
-          </Form.Select>
-
-          <Button variant="primary" type="submit">
-            Submit
+      <Wrapper>
+        <h1>To-Do List</h1>
+        <InputDiv>
+          <InputEl
+            type="text"
+            onChange={(e) => setInputVal(e.target.value)}
+            value={inputVal}
+            placeholder="todo..."
+          />
+          <Button onClick={addTodo}>ADD</Button>
+        </InputDiv>
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="list">
+            {(provided) => (
+              <div ref={provided.innerRef} {...provided.droppableProps}>
+                {listItems.map(({ id, content }: ListItem, index: number) => (
+                  <Draggable key={id} draggableId={id} index={index}>
+                    {(provided) => (
+                      <ListItemEl
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                      >
+                        {content}
+                        <ButtonContainer>
+                          <ButtonInput onClick={() => handleShow(id,content)}  ><FaPenSquare /></ButtonInput>
+                          <ButtonInput onClick={() => deleteTodo(id)}><FaTrash /></ButtonInput>
+                        </ButtonContainer>
+                      </ListItemEl>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+        <Modal show={modalIsOpen} onHide={handleClose}> 
+        <Modal.Header closeButton>
+          <Modal.Title>Modal heading</Modal.Title>
+        </Modal.Header>
+        <Modal.Body><InputEl value={modalInputValue} onChange={(e) => setModalInputValue(e.target.value)} /></Modal.Body>
+        <Modal.Footer>
+          <Button onClick={handleClose} >
+            Close
           </Button>
-        </Form>
-        <Form className="d-flex mb-4">
-          <Form.Group className="w-100">
-            <Form.Control
-              value={filteredName}
-              onChange={(e) => setFilteredName(e.target.value)}
-              type="text"
-              placeholder="Name"
-            />
-          </Form.Group>
-          <Form.Select
-            className="h-100"
-            value={filteredShopId}
-            onChange={(e) => setFilteredShopId(e.target.value)}
-          >
-            <option>Shop</option>
-            {shops.map((shop) => (
-              <option key={shop.id} value={shop.name}>
-                {shop.name}
-              </option>
-            ))}
-          </Form.Select>
-          <Form.Select
-            className="h-100"
-            value={filteredCategoryId}
-            onChange={(e) => setFilteredCategoryId(e.target.value)}
-          >
-            <option>Category</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.name}>
-                {category.name}
-              </option>
-            ))}
-          </Form.Select>
-          <Form.Group
-            onChange={(e) => {
-              setFilteredStatus(e.target.value);
-            }}
-            className="mb-3 d-flex align-items-center"
-          >
-            <Form.Check
-              inline
-              value={"all"}
-              label="All"
-              name="group1"
-              type={"radio"}
-              id={`radio-1`}
-            />
-            <Form.Check
-              inline
-              value={"bought"}
-              label="Bought"
-              name="group1"
-              type={"radio"}
-              id={`radio-2`}
-            />
-            <Form.Check
-              inline
-              value={"notBought"}
-              name="group1"
-              label="Not Bought"
-              type={"radio"}
-              id={`radio-3`}
-            />
-          </Form.Group>
-        </Form>
-
-        <Table striped bordered hover>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Shop</th>
-              <th>Category</th>
-              <th>ID</th>
-              <th>Delete</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredProducts.map((product) => (
-              <tr
-                onClick={() => purchased(product.id)}
-                key={product.id}
-                style={{
-                  textDecoration:
-                    product.isBought === true ? "line-through" : "unset",
-                }}
-              >
-                <td>{product.name}</td>
-                <td>{product.shop}</td>
-                <td>{product.category}</td>
-                <td>{product.id}</td>
-                <td>
-                  <IconComp
-                    product={product}
-                    products={products}
-                    setProducts={setProducts}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      </Container>
+          <Button onClick={handleEdit}  >
+            Save Changes
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      </Wrapper>
     </>
   );
 }
