@@ -49,7 +49,7 @@ const ListItemEl = styled.li`
 const ButtonContainer = styled.div`
 display:flex;
 gap: 1rem;
-`
+`;
 const ButtonInput = styled.button`
 display:flex;
 justify-content:center;
@@ -59,16 +59,16 @@ color: #fff;
 font-size: 1rem;
 padding: .5rem;
 border: 1px solid black;
-`
+`;
 
-interface ListItem {
+interface ListItems {
   id: string;
   content: string;
 }
 
 function App() {
   const [inputVal, setInputVal] = useState<string>("");
-  const [listItems, setListItems] = useState<ListItem[]>([]);
+  const [listItems, setListItems] = useState<ListItems[]>([]);
   const [modalInputValue,setModalInputValue] = useState<string>("")
   const [modalIsOpen,setModalIsOpen] = useState<boolean>(false);
   const [selectedId,setSelectedId] = useState<string>("")
@@ -136,7 +136,7 @@ const handleEdit = () => {
           <Droppable droppableId="list">
             {(provided) => (
               <div ref={provided.innerRef} {...provided.droppableProps}>
-                {listItems.map(({ id, content }: ListItem, index: number) => (
+                {listItems.map(({ id, content }: ListItems, index: number) => (
                   <Draggable key={id} draggableId={id} index={index}>
                     {(provided) => (
                       <ListItemEl
