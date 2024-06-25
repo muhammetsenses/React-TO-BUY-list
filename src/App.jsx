@@ -6,6 +6,13 @@ import { nanoid } from "nanoid";
 import { FaTrash,FaPenSquare } from "react-icons/fa";
 import { Modal } from "react-bootstrap";
 
+
+
+interface ListItems {
+  id: string;
+  content: string;
+}
+
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -61,10 +68,7 @@ padding: .5rem;
 border: 1px solid black;
 `;
 
-interface ListItems {
-  id: string;
-  content: string;
-}
+
 
 function App() {
   const [inputVal, setInputVal] = useState<string>("");
